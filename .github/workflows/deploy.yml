@@ -1,0 +1,59 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      image-tag:
+        description: Image tag to run
+        type: string
+      ref:
+        description: Ref to deploy
+        type: string
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+env:
+  REF: ${{ inputs.ref || 'main' }}
+defaults:
+  run:
+    shell: bash
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: jamesaorson/ursinia
+          ref: ${{ env.REF }}
+      - name: Install - guile
+        run: |
+          sudo apt-get install -y \
+            guile-3.0
+      - name: Render
+        run: |
+          make render
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ github.workspace }}/wwwroot
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+      - package
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
