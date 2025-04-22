@@ -38,7 +38,7 @@ jobs:
             guile-3.0
       - name: Render
         run: |
-          make render
+          make -B render
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
