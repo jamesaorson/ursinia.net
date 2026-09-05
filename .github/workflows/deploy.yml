@@ -36,13 +36,14 @@ jobs:
         run: |
           sudo apt-get install -y \
             guile-3.0
+      - name: Pin source mtimes for Guile compile cache
+        run: |
+          find scripts templates -name '*.scm' -exec touch -d @0 {} +
       - name: Cache - guile compiled bytecode
         uses: actions/cache@v6
         with:
           path: ~/.cache/guile
           key: guile-ccache-${{ runner.os }}-${{ hashFiles('scripts/**/*.scm', 'templates/**/*.scm') }}
-          restore-keys: |
-            guile-ccache-${{ runner.os }}-
       - name: Render
         run: |
           make -B -j render
